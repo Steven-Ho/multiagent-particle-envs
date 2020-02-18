@@ -1,7 +1,7 @@
 import numpy as np
 from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
-
+from copy import deepcopy
 
 class Scenario(BaseScenario):
     def make_world(self):
@@ -25,10 +25,10 @@ class Scenario(BaseScenario):
             landmark.collide = False
             landmark.movable = False
         # make initial conditions
-        self.reset_world(world)
+        self.reset_world(world, retain=False)
         return world
 
-    def reset_world(self, world):
+    def reset_world(self, world, retain=True):
         # random properties for agents
         for i, agent in enumerate(world.agents):
             agent.color = np.array([0.35, 0.35, 0.85])
@@ -36,13 +36,26 @@ class Scenario(BaseScenario):
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
-        for agent in world.agents:
-            agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
-            agent.state.p_vel = np.zeros(world.dim_p)
-            agent.state.c = np.zeros(world.dim_c)
-        for i, landmark in enumerate(world.landmarks):
-            landmark.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
-            landmark.state.p_vel = np.zeros(world.dim_p)
+        if not retain:
+            self.agent_pos = []
+            self.landmark_pos = []
+            for agent in world.agents:
+                self.agent_pos.append(np.random.uniform(-1, +1, world.dim_p))
+                agent.state.p_pos = deepcopy(self.agent_pos[-1])
+                agent.state.p_vel = np.zeros(world.dim_p)
+                agent.state.c = np.zeros(world.dim_c)
+            for landmark in world.landmarks:
+                self.landmark_pos.append(np.random.uniform(-1, +1, world.dim_p))
+                landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
+                landmark.state.p_vel = np.zeros(world.dim_p)
+        else:
+            for agent, pos in zip(world.agents, self.agent_pos):
+                agent.state.p_pos = deepcopy(pos)
+                agent.state.p_vel = np.zeros(world.dim_p)
+                agent.state.c = np.zeros(world.dim_c)
+            for landmark, pos in zip(world.landmarks, self.landmark_pos):
+                landmark.state.p_pos = deepcopy(pos)
+                landmark.state.p_vel = np.zeros(world.dim_p)
 
     def benchmark_data(self, agent, world):
         rew = 0
