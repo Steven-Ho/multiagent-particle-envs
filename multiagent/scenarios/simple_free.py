@@ -4,12 +4,12 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self):
+    def make_world(self, na=3, nl=3):
         world = World()
         # set any world properties first
         world.dim_c = 2
-        num_agents = 3
-        num_landmarks = 3
+        num_agents = na
+        num_landmarks = nl
         world.collaborative = True
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
@@ -56,7 +56,7 @@ class Scenario(BaseScenario):
             for landmark, pos in zip(world.landmarks, self.landmark_pos):
                 landmark.state.p_pos = deepcopy(pos)
                 landmark.state.p_vel = np.zeros(world.dim_p)
-
+    
     def benchmark_data(self, agent, world):
         rew = 0
         collisions = 0
@@ -75,7 +75,6 @@ class Scenario(BaseScenario):
                     collisions += 1
         return (rew, collisions, min_dists, occupied_landmarks)
 
-
     def is_collision(self, agent1, agent2):
         delta_pos = agent1.state.p_pos - agent2.state.p_pos
         dist = np.sqrt(np.sum(np.square(delta_pos)))
@@ -83,15 +82,8 @@ class Scenario(BaseScenario):
         return True if dist < dist_min else False
 
     def reward(self, agent, world):
-        # Agents are rewarded based on minimum agent distance to each landmark, penalized for collisions
+        # No reward in this scenario
         rew = 0
-        for l in world.landmarks:
-            dists = [np.sqrt(np.sum(np.square(a.state.p_pos - l.state.p_pos))) for a in world.agents]
-            rew -= min(dists)
-        if agent.collide:
-            for a in world.agents:
-                if self.is_collision(a, agent):
-                    rew -= 1
         return rew
 
     def observation(self, agent, world):
@@ -99,10 +91,6 @@ class Scenario(BaseScenario):
         entity_pos = []
         for entity in world.landmarks:  # world.entities:
             entity_pos.append(entity.state.p_pos - agent.state.p_pos)
-        # entity colors
-        entity_color = []
-        for entity in world.landmarks:  # world.entities:
-            entity_color.append(entity.color)
         # communication of all other agents
         comm = []
         other_pos = []
