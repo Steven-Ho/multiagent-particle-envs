@@ -52,13 +52,15 @@ class Scenario(BaseScenario):
         else:
             self.agent_pos = []
             self.landmark_pos = []
-            for agent in world.agents:
-                self.agent_pos.append(np.zeros(world.dim_p))
+            na = float(len(world.agents))
+            nl = float(len(world.landmarks))
+            for i, agent in enumerate(world.agents):
+                self.agent_pos.append(np.array((0., 2*i/(na-1)-1)))
                 agent.state.p_pos = deepcopy(self.agent_pos[-1])
                 agent.state.p_vel = np.zeros(world.dim_p)
                 agent.state.c = np.zeros(world.dim_c)
-            for landmark in world.landmarks:
-                self.landmark_pos.append(np.zeros(world.dim_p))
+            for i, landmark in enumerate(world.landmarks):
+                self.landmark_pos.append(np.array((2*i/(nl-1)-1, 0.)))
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
     
