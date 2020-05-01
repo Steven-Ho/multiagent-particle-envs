@@ -3,7 +3,7 @@ from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
 
 class Scenario(BaseScenario):
-    def make_world(self):
+    def make_world(self, random=True):
         world = World()
         # set any world properties first
         world.dim_c = 10
@@ -20,6 +20,10 @@ class Scenario(BaseScenario):
             landmark.collide = False
             landmark.movable = False
         # make initial conditions
+        if not random:
+            self.init_pos = np.array([[-0.2, 0],[0.2, 0]])
+            self.init_landmark = np.array([[-0.7, 0.7],[0.7, 0.7],[0, -0.8]])
+        self.random = random
         self.reset_world(world)
         return world
 
@@ -42,15 +46,24 @@ class Scenario(BaseScenario):
         world.landmarks[2].color = np.array([0.25,0.25,0.75]) 
         # special colors for goals
         world.agents[0].goal_a.color = world.agents[0].goal_b.color                
-        world.agents[1].goal_a.color = world.agents[1].goal_b.color                               
-        # set random initial states
-        for agent in world.agents:
-            agent.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
-            agent.state.p_vel = np.zeros(world.dim_p)
-            agent.state.c = np.zeros(world.dim_c)
-        for i, landmark in enumerate(world.landmarks):
-            landmark.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
-            landmark.state.p_vel = np.zeros(world.dim_p)
+        world.agents[1].goal_a.color = world.agents[1].goal_b.color
+        if self.random:    
+            # set random initial states
+            for agent in world.agents:
+                agent.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
+                agent.state.p_vel = np.zeros(world.dim_p)
+                agent.state.c = np.zeros(world.dim_c)
+            for i, landmark in enumerate(world.landmarks):
+                landmark.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
+                landmark.state.p_vel = np.zeros(world.dim_p)
+        else:
+            for agent in world.agents:
+                agent.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
+                agent.state.p_vel = np.zeros(world.dim_p)
+                agent.state.c = np.zeros(world.dim_c)
+            for i, landmark in enumerate(world.landmarks):
+                landmark.state.p_pos = np.random.uniform(-1,+1, world.dim_p)
+                landmark.state.p_vel = np.zeros(world.dim_p)
 
     def reward(self, agent, world):
         if agent.goal_a is None or agent.goal_b is None:
