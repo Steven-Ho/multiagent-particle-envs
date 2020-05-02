@@ -4,12 +4,12 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self):
+    def make_world(self, na=3, nl=3, random=True):
         world = World()
         # set any world properties first
         world.dim_c = 2
-        num_agents = 3
-        num_landmarks = 3
+        num_agents = na
+        num_landmarks = nl
         world.collaborative = True
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
@@ -25,10 +25,24 @@ class Scenario(BaseScenario):
             landmark.collide = False
             landmark.movable = False
         # make initial conditions
-        self.reset_world(world, retain=False)
+        if not random:
+            if num_agents == 3:
+                self.init_pos = np.array([[-0.2, -0.2],[0.2,-0.2],[0, 0.1]])
+            elif num_agents == 4:
+                self.init_pos = np.array([[0.2,0.2],[-0.2,0.2],[-0.2,-0.2],[0.2,-0.2]])
+            else:
+                self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
+            if num_landmarks == 3:
+                self.init_landmark = np.array([[-0.7, 0.7],[0.7, 0.7],[0, -0.8]])
+            elif num_agents == 4:
+                self.init_landmark = np.array([[0, 0.8],[-0.8, 0],[0, -0.8], [0.8, 0]])
+            else:
+                self.init_landmark = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
+        self.random = random
+        self.reset_world(world)
         return world
 
-    def reset_world(self, world, retain=False):
+    def reset_world(self, world):
         # random properties for agents
         for i, agent in enumerate(world.agents):
             agent.color = np.array([0.35, 0.35, 0.85])
@@ -36,7 +50,7 @@ class Scenario(BaseScenario):
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
-        if not retain:
+        if self.random:
             self.agent_pos = []
             self.landmark_pos = []
             for agent in world.agents:
@@ -49,12 +63,21 @@ class Scenario(BaseScenario):
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
         else:
-            for agent, pos in zip(world.agents, self.agent_pos):
-                agent.state.p_pos = deepcopy(pos)
+            self.agent_pos = []
+            self.landmark_pos = []
+            # na = float(len(world.agents))
+            # nl = float(len(world.landmarks))
+            
+            for i, agent in enumerate(world.agents):
+                # self.agent_pos.append(np.array((0., 2*i/(na-1)-1)))
+                self.agent_pos.append(self.init_pos[i])
+                agent.state.p_pos = deepcopy(self.agent_pos[-1])
                 agent.state.p_vel = np.zeros(world.dim_p)
                 agent.state.c = np.zeros(world.dim_c)
-            for landmark, pos in zip(world.landmarks, self.landmark_pos):
-                landmark.state.p_pos = deepcopy(pos)
+            for i, landmark in enumerate(world.landmarks):
+                # self.landmark_pos.append(np.array((2*i/(nl-1)-1, 0.)))
+                self.landmark_pos.append(self.init_landmark[i])
+                landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
 
     def benchmark_data(self, agent, world):
@@ -74,7 +97,6 @@ class Scenario(BaseScenario):
                     rew -= 1
                     collisions += 1
         return (rew, collisions, min_dists, occupied_landmarks)
-
 
     def is_collision(self, agent1, agent2):
         delta_pos = agent1.state.p_pos - agent2.state.p_pos
@@ -99,10 +121,6 @@ class Scenario(BaseScenario):
         entity_pos = []
         for entity in world.landmarks:  # world.entities:
             entity_pos.append(entity.state.p_pos - agent.state.p_pos)
-        # entity colors
-        entity_color = []
-        for entity in world.landmarks:  # world.entities:
-            entity_color.append(entity.color)
         # communication of all other agents
         comm = []
         other_pos = []
