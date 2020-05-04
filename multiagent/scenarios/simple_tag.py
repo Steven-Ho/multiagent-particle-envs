@@ -4,21 +4,21 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, random=True):
+    def make_world(self, random=True, nl=2):
         world = World()
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
         num_adversaries = 3
         num_agents = num_adversaries + num_good_agents
-        num_landmarks = 2
+        num_landmarks = nl
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.silent = True
             agent.adversary = True if i < num_adversaries else False
-            agent.collide = True if agent.adversary else False
+            agent.collide = True
             agent.size = 0.075 if agent.adversary else 0.05
             agent.accel = 3.0 if agent.adversary else 4.0
             #agent.accel = 20.0 if agent.adversary else 25.0
@@ -116,15 +116,15 @@ class Scenario(BaseScenario):
                     rew -= 10
 
         # agents are penalized for exiting the screen, so that they can be caught by the adversaries
-        def bound(x):
-            if x < 0.9:
-                return 0
-            if x < 1.0:
-                return (x - 0.9) * 10
-            return min(np.exp(2 * x - 2), 10)
-        for p in range(world.dim_p):
-            x = abs(agent.state.p_pos[p])
-            rew -= bound(x)
+        # def bound(x):
+        #     if x < 0.9:
+        #         return 0
+        #     if x < 1.0:
+        #         return (x - 0.9) * 10
+        #     return min(np.exp(2 * x - 2), 10)
+        # for p in range(world.dim_p):
+        #     x = abs(agent.state.p_pos[p])
+        #     rew -= bound(x)
 
         return rew
 
