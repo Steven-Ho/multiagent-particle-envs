@@ -36,7 +36,7 @@ class Scenario(BaseScenario):
             else:
                 self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
             if num_landmarks == 3:
-                self.init_landmark = np.array([[-0.7, 0.7],[0.7, 0.7],[0, 0.7]])
+                self.init_landmark = np.array([[-0.7, 0.7],[0.7, 0.7],[0, -0.7]])
             elif num_agents == 4:
                 self.init_landmark = np.array([[0, 0.8],[-0.8, 0],[0, -0.8], [0.8, 0]])
             else:
