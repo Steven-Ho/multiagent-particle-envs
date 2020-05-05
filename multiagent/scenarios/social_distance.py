@@ -116,7 +116,7 @@ class Scenario(BaseScenario):
                 if a is b:
                     continue
                 dists.append(np.linalg.norm(a.state.p_pos - b.state.p_pos))
-        rew -= min(dists)
+        rew += min(dists)
         return rew
 
     def observation(self, agent, world):
