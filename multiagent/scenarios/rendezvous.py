@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, na=4, nl=0, random=True):
+    def make_world(self, na=4, nl=1, random=True):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -28,19 +28,15 @@ class Scenario(BaseScenario):
             landmark.collide = False
             landmark.movable = False
         # make initial conditions
-        if not random:
-            if num_agents == 3:
-                self.init_pos = np.array([[-0.2, -0.2],[0.2,-0.2],[0, 0.1]])
-            elif num_agents == 4:
-                self.init_pos = np.array([[0.8,0.8],[-0.8,0.8],[-0.8,-0.8],[0.8,-0.8]])
-            else:
-                self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
-            if num_landmarks == 3:
-                self.init_landmark = np.array([[-0.7, 0.7],[0.7, 0.7],[0, 0.7]])
-            elif num_agents == 4:
-                self.init_landmark = np.array([[0, 0.8],[-0.8, 0],[0, -0.8], [0.8, 0]])
-            else:
-                self.init_landmark = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
+        if num_agents == 2:
+            self.init_pos = np.array([[-0.8,-0.8],[0.8, 0.8]])
+        elif num_agents == 3:
+            self.init_pos = np.array([[-0.8,-0.8],[0.8,-0.8],[0.8, 0.8]])
+        elif num_agents == 4:
+            self.init_pos = np.array([[0.8,0.8],[-0.8,0.8],[-0.8,-0.8],[0.8,-0.8]])
+        else:
+            self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
+        self.init_landmark = np.array([[0.0, 0.0]])
         self.random = random
         self.reset_world(world)
         return world
@@ -53,32 +49,21 @@ class Scenario(BaseScenario):
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
+        self.agent_pos = []
+        for i, agent in enumerate(world.agents):
+            self.agent_pos.append(self.init_pos[i])
+            agent.state.p_pos = deepcopy(self.agent_pos[-1])
+            agent.state.p_vel = np.zeros(world.dim_p)
+            agent.state.c = np.zeros(world.dim_c)
         if self.random:
-            self.agent_pos = []
             self.landmark_pos = []
-            for agent in world.agents:
-                self.agent_pos.append(np.random.uniform(-1, +1, world.dim_p))
-                agent.state.p_pos = deepcopy(self.agent_pos[-1])
-                agent.state.p_vel = np.zeros(world.dim_p)
-                agent.state.c = np.zeros(world.dim_c)
             for landmark in world.landmarks:
-                self.landmark_pos.append(np.random.uniform(-1, +1, world.dim_p))
+                self.landmark_pos.append(np.random.uniform(-0.2, +0.2, world.dim_p))
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
         else:
-            self.agent_pos = []
             self.landmark_pos = []
-            # na = float(len(world.agents))
-            # nl = float(len(world.landmarks))
-            
-            for i, agent in enumerate(world.agents):
-                # self.agent_pos.append(np.array((0., 2*i/(na-1)-1)))
-                self.agent_pos.append(self.init_pos[i])
-                agent.state.p_pos = deepcopy(self.agent_pos[-1])
-                agent.state.p_vel = np.zeros(world.dim_p)
-                agent.state.c = np.zeros(world.dim_c)
             for i, landmark in enumerate(world.landmarks):
-                # self.landmark_pos.append(np.array((2*i/(nl-1)-1, 0.)))
                 self.landmark_pos.append(self.init_landmark[i])
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
@@ -109,7 +94,8 @@ class Scenario(BaseScenario):
 
     def reward(self, agent, world):
         # individual reward
-        rew = -np.linalg.norm(agent.state.p_pos)
+        # rew = -np.linalg.norm(agent.state.p_pos)
+        rew = -np.linalg.norm(agent.state.p_pos - world.landmarks[0].state.p_pos)
         return rew
 
     def observation(self, agent, world):
