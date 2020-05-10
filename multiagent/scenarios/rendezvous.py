@@ -58,7 +58,7 @@ class Scenario(BaseScenario):
         if self.random:
             self.landmark_pos = []
             for landmark in world.landmarks:
-                self.landmark_pos.append(np.random.uniform(-0.2, +0.2, world.dim_p))
+                self.landmark_pos.append(np.random.uniform(-0.5, +0.5, world.dim_p))
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
         else:
@@ -95,8 +95,23 @@ class Scenario(BaseScenario):
     def reward(self, agent, world):
         # individual reward
         # rew = -np.linalg.norm(agent.state.p_pos)
-        rew = -np.linalg.norm(agent.state.p_pos - world.landmarks[0].state.p_pos)
+        diff = agent.state.p_pos - world.landmarks[0].state.p_pos
+        dist = np.linalg.norm(diff)
+        rew = -0.1*dist*dist
+        if dist < 0.075:
+            rew += 10
         return rew
+
+    def done(self, agent, world):
+        dists = []
+        for agent in world.agents:
+            diff = agent.state.p_pos - world.landmarks[0].state.p_pos
+            dists.append(np.linalg.norm(diff))
+        if min(dists) < 0.075:
+            done = True
+        else:
+            done = False
+        return done
 
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame

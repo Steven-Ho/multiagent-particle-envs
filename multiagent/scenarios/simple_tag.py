@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, random=True, nl=2):
+    def make_world(self, random=True, nl=0):
         world = World()
         # set any world properties first
         world.dim_c = 2
