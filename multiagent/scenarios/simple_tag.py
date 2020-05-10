@@ -1,11 +1,14 @@
 import numpy as np
 from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
-
+from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self):
+    def make_world(self, random=True, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
         world = World()
+        self.random=random
+        self.init_pos=np.array(init_pos)
+        self.init_landmark=np.array([[-0.5,0.5],[0.5,0.5]])
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
@@ -44,13 +47,23 @@ class Scenario(BaseScenario):
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
-        for agent in world.agents:
-            agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
+        self.agent_pos = []
+        self.landmark_pos = []
+        for i, agent in enumerate(world.agents):
+            if self.random:
+                agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
+            else:
+                self.agent_pos.append(self.init_pos[i])
+                agent.state.p_pos = deepcopy(self.agent_pos[-1])
             agent.state.p_vel = np.zeros(world.dim_p)
             agent.state.c = np.zeros(world.dim_c)
         for i, landmark in enumerate(world.landmarks):
             if not landmark.boundary:
-                landmark.state.p_pos = np.random.uniform(-0.9, +0.9, world.dim_p)
+                if self.random:
+                    landmark.state.p_pos = np.random.uniform(-0.9, +0.9, world.dim_p)
+                else:
+                    self.landmark_pos.append(self.init_landmark[i])
+                    landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
 
 
