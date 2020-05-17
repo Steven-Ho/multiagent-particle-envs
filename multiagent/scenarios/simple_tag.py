@@ -4,11 +4,12 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, random=True, nl=0, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
+    def make_world(self, random=True, collide_reward=False, nl=0, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
         world = World()
         self.random=random
         self.init_pos=np.array(init_pos)
         self.init_landmark=np.array([[-0.5,0.5],[0.5,0.5]])
+        self.collide_reward = collide_reward
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
@@ -135,7 +136,7 @@ class Scenario(BaseScenario):
         if shape:  # reward can optionally be shaped (decreased reward for increased distance from agents)
             for adv in adversaries:
                 rew -= 0.1 * min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents])
-        if agent.collide:
+        if self.collide_reward and agent.collide:
             for ag in agents:
                 for adv in adversaries:
                     if self.is_collision(ag, adv):
