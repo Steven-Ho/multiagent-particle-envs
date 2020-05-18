@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, na=4, nl=1, random=True):
+    def make_world(self, na=4, nl=1, random=True, random_agent=True):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -38,10 +38,11 @@ class Scenario(BaseScenario):
             self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(num_agents)]
         self.init_landmark = np.array([[0.0, 0.0]])
         self.random = random
+        self.random_agent = random_agent
         self.reset_world(world)
         return world
 
-    def reset_world(self, world):
+    def reset_world(self, world, pos=[]):
         # random properties for agents
         for i, agent in enumerate(world.agents):
             agent.color = np.array([0.35, 0.35, 0.85])
@@ -50,11 +51,13 @@ class Scenario(BaseScenario):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
         self.agent_pos = []
+        if self.random_agent:
+            self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(len(world.agents))]
         for i, agent in enumerate(world.agents):
             self.agent_pos.append(self.init_pos[i])
             agent.state.p_pos = deepcopy(self.agent_pos[-1])
             agent.state.p_vel = np.zeros(world.dim_p)
-            agent.state.c = np.zeros(world.dim_c)
+            agent.state.c = np.zeros(world.dim_c) 
         if self.random:
             self.landmark_pos = []
             for landmark in world.landmarks:
@@ -98,20 +101,21 @@ class Scenario(BaseScenario):
         diff = agent.state.p_pos - world.landmarks[0].state.p_pos
         dist = np.linalg.norm(diff)
         rew = -0.1*dist*dist
-        if dist < 0.075:
-            rew += 10
+        # if dist < 0.075:
+        #     rew += 0.1
         return rew
 
     def done(self, agent, world):
-        dists = []
-        for agent in world.agents:
-            diff = agent.state.p_pos - world.landmarks[0].state.p_pos
-            dists.append(np.linalg.norm(diff))
-        if min(dists) < 0.075:
-            done = True
-        else:
-            done = False
-        return done
+        # dists = []
+        # for agent in world.agents:
+        #     diff = agent.state.p_pos - world.landmarks[0].state.p_pos
+        #     dists.append(np.linalg.norm(diff))
+        # if min(dists) < 0.075:
+        #     done = True
+        # else:
+        #     done = False
+        # return done
+        return False
 
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame
