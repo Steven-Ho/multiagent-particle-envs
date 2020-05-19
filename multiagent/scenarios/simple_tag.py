@@ -4,8 +4,12 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, random=True, nl=0):
+    def make_world(self, random=True, collide_reward=False, nl=0, disturb=False, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
         world = World()
+        self.random=random
+        self.init_pos=np.array(init_pos)
+        self.init_landmark=np.array([[-0.5,0.5],[0.5,0.5]])
+        self.collide_reward = collide_reward
         # set any world properties first
         world.dim_c = 2
         num_good_agents = 1
@@ -33,6 +37,7 @@ class Scenario(BaseScenario):
             landmark.boundary = False
         # make initial conditions
         self.random = random
+        self.disturb = disturb
         self.reset_world(world)
         return world
 
@@ -45,28 +50,25 @@ class Scenario(BaseScenario):
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
-        if self.random:
-            for agent in world.agents:
+        self.agent_pos = []
+        self.landmark_pos = []
+        for i, agent in enumerate(world.agents):
+            if self.random:
                 agent.state.p_pos = np.random.uniform(-1, +1, world.dim_p)
-                agent.state.p_vel = np.zeros(world.dim_p)
-                agent.state.c = np.zeros(world.dim_c)
-            for i, landmark in enumerate(world.landmarks):
-                if not landmark.boundary:
-                    landmark.state.p_pos = np.random.uniform(-0.9, +0.9, world.dim_p)
-                    landmark.state.p_vel = np.zeros(world.dim_p)
-        else:
-            self.agent_pos = []
-            self.landmark_pos = []
-            na = float(len(world.agents))
-            nl = float(len(world.landmarks))
-            for i, agent in enumerate(world.agents):
-                self.agent_pos.append(np.array((0., (2*i/(na-1)-1)*0.7)))
+            else:
+                self.agent_pos.append(self.init_pos[i])
+                if self.disturb:
+                    self.agent_pos[-1] += np.random.uniform(-0.1, +0.1, world.dim_p)
                 agent.state.p_pos = deepcopy(self.agent_pos[-1])
-                agent.state.p_vel = np.zeros(world.dim_p)
-                agent.state.c = np.zeros(world.dim_c)
-            for i, landmark in enumerate(world.landmarks):
-                self.landmark_pos.append(np.array(((2*i/(nl-1)-1)*0.7, 0.)))
-                landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
+            agent.state.p_vel = np.zeros(world.dim_p)
+            agent.state.c = np.zeros(world.dim_c)
+        for i, landmark in enumerate(world.landmarks):
+            if not landmark.boundary:
+                if self.random:
+                    landmark.state.p_pos = np.random.uniform(-0.9, +0.9, world.dim_p)
+                else:
+                    self.landmark_pos.append(self.init_landmark[i])
+                    landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
 
 
@@ -137,7 +139,7 @@ class Scenario(BaseScenario):
         if shape:  # reward can optionally be shaped (decreased reward for increased distance from agents)
             for adv in adversaries:
                 rew -= 0.1 * min([np.sqrt(np.sum(np.square(a.state.p_pos - adv.state.p_pos))) for a in agents])
-        if agent.collide:
+        if self.collide_reward and agent.collide:
             for ag in agents:
                 for adv in adversaries:
                     if self.is_collision(ag, adv):
