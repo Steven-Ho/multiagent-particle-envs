@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, na=4, nl=1, random=True, random_agent=True):
+    def make_world(self, na=4, nl=1, random=True, random_agent=True, init=None):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -29,7 +29,7 @@ class Scenario(BaseScenario):
             landmark.movable = False
         # make initial conditions
         if num_agents == 2:
-            self.init_pos = np.array([[-0.8,-0.8],[0.8, 0.8]])
+            self.init_pos = np.array([[0.8, -0.8],[0.8, 0.8]]) if init is None else np.array(init)
         elif num_agents == 3:
             self.init_pos = np.array([[-0.8,-0.8],[0.8,-0.8],[0.8, 0.8]])
         elif num_agents == 4:
@@ -51,6 +51,8 @@ class Scenario(BaseScenario):
             landmark.color = np.array([0.25, 0.25, 0.25])
         # set random initial states
         self.agent_pos = []
+        if len(pos) > 0:
+            self.init_pos = np.array(pos)
         if self.random_agent:
             self.init_pos = [np.random.uniform(-1, +1, world.dim_p) for i in range(len(world.agents))]
         for i, agent in enumerate(world.agents):
