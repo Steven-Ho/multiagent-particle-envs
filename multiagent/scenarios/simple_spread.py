@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, na=3, nl=3, random=True, disturb=False, disturb_size=0.1):
+    def make_world(self, na=3, nl=3, random=True, disturb=False, disturb_size=0.1, ori_version=False):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -17,10 +17,12 @@ class Scenario(BaseScenario):
             agent.name = 'agent %d' % i
             agent.collide = True
             agent.silent = True
-            # agent.size = 0.15
-            agent.size = 0.075
-            agent.accel = 1.0
-            agent.max_speed = 1.0       
+            if ori_version:
+                agent.size = 0.15
+            else:
+                agent.size = 0.075
+                agent.accel = 1.0
+                agent.max_speed = 1.0       
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
