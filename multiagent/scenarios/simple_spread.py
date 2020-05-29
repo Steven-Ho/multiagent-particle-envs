@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self, na=3, nl=3, random=True, disturb=False, disturb_size=0.1, ori_version=False):
+    def make_world(self, na=3, nl=3, random=True, random_landmark=False, disturb=False, disturb_size=0.1, ori_version=False):
         world = World()
         # set any world properties first
         world.dim_c = 2
@@ -46,6 +46,7 @@ class Scenario(BaseScenario):
         self.random = random
         self.disturb = disturb
         self.disturb_size = disturb_size
+        self.random_landmark = random_landmark
         self.reset_world(world)
         return world
 
@@ -86,7 +87,10 @@ class Scenario(BaseScenario):
                 agent.state.c = np.zeros(world.dim_c)
             for i, landmark in enumerate(world.landmarks):
                 # self.landmark_pos.append(np.array((2*i/(nl-1)-1, 0.)))
-                self.landmark_pos.append(self.init_landmark[i])
+                if self.random_landmark:
+                    self.landmark_pos.append(np.random.uniform(-1, +1, world.dim_p))
+                else:
+                    self.landmark_pos.append(self.init_landmark[i])
                 landmark.state.p_pos = deepcopy(self.landmark_pos[-1])
                 landmark.state.p_vel = np.zeros(world.dim_p)
 
