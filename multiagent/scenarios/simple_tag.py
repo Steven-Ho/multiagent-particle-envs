@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 from copy import deepcopy
 
 class Scenario(BaseScenario):
-    def make_world(self,high_acc=False, random=True, collide_reward=False, nl=0, disturb=False, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
+    def make_world(self,high_acc=False, random=True, collide_reward=False, collide_ratio=10, nl=0, disturb=False, init_pos=[[0,0.8],[-0.7,-0.7],[0.7,-0.7],[0.0,0.0]]):
         world = World()
         self.random=random
         self.init_pos=np.array(init_pos)
@@ -40,6 +40,7 @@ class Scenario(BaseScenario):
         # make initial conditions
         self.random = random
         self.disturb = disturb
+        self.collide_ratio = collide_ratio
         self.reset_world(world)
         return world
 
@@ -145,7 +146,7 @@ class Scenario(BaseScenario):
             for ag in agents:
                 for adv in adversaries:
                     if self.is_collision(ag, adv):
-                        rew += 10
+                        rew += self.collide_ratio
         return rew
 
     def observation(self, agent, world):
